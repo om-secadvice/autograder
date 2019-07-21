@@ -1,0 +1,47 @@
+upstream gunicorn_server {
+	server unix:/home/cse/autograder/autograder.sock fail_timeout=0;
+
+}
+
+server {
+	listen 8080 ssl http2 default_server;
+	client_max_body_size 5M;
+	server_name cs628a.cse.iitk.ac.in,csehn5.cse.iitk.ac.in;
+	keepalive_timeout 70;
+	access_log /var/log/nginx/autograder.access_log;
+	error_log /var/log/nginx/autograder.error_log;
+	location = /favico.ico { 
+		alias /home/cse/autograder/assets/images/favicon-16x16.png;
+		access_log off;
+		log_not_found off; 
+	}
+	location /static {
+		root /home/cse/autograder;
+		access_log off;
+		add_header Cache-Control "public";
+		proxy_ignore_headers "Set-Cookie";
+	}
+	
+	location /internal {
+		internal;
+		alias /home/cse/autograder/protected;
+		add_header Cache-Control "no-store";
+		proxy_ignore_headers "Set-Cookie";
+	}
+	location /media {
+		internal;
+		alias /home/cse/autograder/media;
+		add_header Cache-Control "public";
+                proxy_ignore_headers "Set-Cookie";
+	}
+	location @proxy_to_app {
+    		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    		proxy_set_header Host $http_host;
+    		proxy_redirect off;
+    		proxy_pass   https://gunicorn_server;
+	}
+	location / {
+		add_header Cache-Control "no-store";
+		try_files $uri @proxy_to_app;	
+    	}
+}

@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% block title %}
+    Dashboard | CS628A-Computer Systems Security
+{% endblock  %}
+{% load app_filters %}
+{% block content %}
+<script>
+function getTimeRemaining(endtime) {
+  var t = Date.parse(endtime) - Date.parse(new Date());
+  var seconds = Math.floor((t / 1000) % 60);
+  var minutes = Math.floor((t / 1000 / 60) % 60);
+  var hours = Math.floor((t / (1000 * 60 * 60)) % 24);
+  var days = Math.floor(t / (1000 * 60 * 60 * 24));
+  return {
+    'total': t,
+    'days': days,
+    'hours': hours,
+    'minutes': minutes,
+    'seconds': seconds
+  };
+}
+
+function initializeClock(id, endtime) {
+  var clock = document.getElementById(id);
+  var daysSpan = clock.querySelector('.days');
+  var hoursSpan = clock.querySelector('.hours');
+  var minutesSpan = clock.querySelector('.minutes');
+  var secondsSpan = clock.querySelector('.seconds');
+
+  function updateClock() {
+    var t = getTimeRemaining(endtime);
+
+    daysSpan.innerHTML = t.days;
+    hoursSpan.innerHTML = ('0' + t.hours).slice(-2);
+    minutesSpan.innerHTML = ('0' + t.minutes).slice(-2);
+    secondsSpan.innerHTML = ('0' + t.seconds).slice(-2);
+
+    if (t.total <= 0) {
+      clearInterval(timeinterval);
+    }
+  }
+
+  updateClock();
+  var timeinterval = setInterval(updateClock, 1000);
+}
+
+{% comment %} var deadline = new Date(Date.parse(new Date()) + 15 * 24 * 60 * 60 * 1000);
+initializeClock('clockdiv', deadline); {% endcomment %}
+</script>
+    
+    <div class="container">
+        <div class="row infobar">
+            <div class="col s12 m12 l12 ">
+            <div class="card white darken-3">
+                    <div class="card-content  center">
+                        <span>Welcome {{ context.username }}</span>
+                        
+                    </div>
+                    
+            </div>
+            {% for forms in context.forms%}
+            {% for form,assignment,late_deadline,is_late in forms%}
+             <form method="post" enctype="multipart/form-data" >
+            <div class="card white darken-3">
+               
+                    <div class="card-content teal-text center">
+                        <span class="left hide-on-small-only" style="font-size:x-large;">{% if is_late %}Late{% else %}Ongoing{% endif %}  Assignment:</span> <font color="black" style="font-size:x-large;"><a href="/media/{{ assignment.file }}">{{ assignment.name }}</a></font>
+                       
+                        {% csrf_token %}
+                        <button type= "submit"  style="margin-top: 0%" class="waves-effect waves-light btn right">Submit<i class="material-icons right">send</i></button>
+                        
+                        {% comment %} <input type="file" id="upload" name="solution_file" hidden></input> {% endcomment %}
+                        {{ form.solution_file }}
+                        
+                        <label for="{{form.solution_file.id_for_label}}" style="margin-top: 0%; margin-right: 2%"
+                            class="waves-effect waves-light btn right">Upload<i class="material-icons right">file_upload</i></label>
+                        
+                  
+                        {{ form.assignment }}
+                    </div>
+                    
+                
+
+                <div class="card-action ">
+                <div class="row">
+                <div class="col s7 m9 l9">
+                
+                <div id="clockdiv{{assignment.id}}" class="clockdiv">
+                <div class="hide-on-small-only">
+    <span >Time Remaining</span>
+    {% if is_late %}<div class="smalltext" style="margin-right;font-color:red">Penalty/Late Days {% else %}<div class="smalltext" style="margin-right">No Penalty{% endif %}</div>
+  </div>
+                
+  <div>
+    <span class="days"></span>
+    <div class="smalltext">Days</div>
+  </div>
+  <div>
+    <span class="hours"></span>
+    <div class="smalltext">Hours</div>
+  </div>
+  <div>
+    <span class="minutes"></span>
+    <div class="smalltext">Minutes</div>
+  </div>
+  <div>
+    <span class="seconds"></span>
+    <div class="smalltext">Seconds</div>
+  </div>
+</div>
+<script>
+var deadline = new Date("{% if late_deadline %}{{late_deadline.isoformat}}{% else %}{{assignment.deadline.isoformat}}{% endif %}");
+initializeClock('clockdiv{{assignment.id}}', deadline);
+</script>
+</div>
+<div class="col s5 m3 l2 offset-l1   ">
+           <label>
+           {{form.need_late_days}}
+           <span> Use Late Days</span>
+           </label>         
+           </div>
+           </div>
+                </div>
+            </div>
+            </form>
+            {% endfor %}
+            {% endfor %}
+<script>
+window.onload=function(){
+    {% for msg in context.messages %}
+        M.toast({html:'{{ msg }}'});
+    {% endfor %}
+    $('input[name=solution_file]')
+        .change(function(e){
+            var x=$('label[for='+e.target.id+']');
+            console.log(x);x[0].title=e.target.value.split('\\').pop();
+            M.toast({html:'File Selected: '+e.target.value.split('\\').pop()});
+            M.toast({html:'Click Submit'});
+            })
+    $('input[type="checkbox"]').change(function(){
+        if($(this).is(":checked")) {
+          $.get("late_days",function(data){
+            M.toast({html:data});
+          });
+        }
+        
+    });
+}
+
+
+</script>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col s12 m12 l12">
+                <table class="white striped centered">
+                    <caption class="white caption"><b>Complete Submission Summary</b></caption>
+                    <thead>
+                        <tr>
+                            <th>Assign. No.</th>
+                            <th>Assignment Name</th>
+                            <th>Deadline</th>
+                            <th>Last Submission</th>
+                            <th>Sub. No.</th>
+                            <th>Late Days</th>
+                            <th>Penalty</th>
+                            <th>Download Link</th>
+                            <th>Report</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                    {% for  student_assignment,report_link in context.student_assignments  %}
+                        <tr>
+                            <td>{{student_assignment.assignment.number}}.{{student_assignment.assignment.part}}</td>
+                            <td>{{student_assignment.assignment.name}} </td>
+                            <td>{{student_assignment.assignment.deadline}}</td>
+                            <td>{{student_assignment.submitted_on}}</td>
+                            <td>{{student_assignment.submission_count}}</td>
+                            <td>{{student_assignment.late_days_used|smooth_timedelta}}</td>
+                            <td>{{student_assignment.penalty}}</td>
+                            <td><a href="/protected/{{student_assignment.solution_file}}">Download</a></td>
+                            <td>
+                            {% ifnotequal report_link "#" %}<a href="/protected/{{report_link}}">Download</a>{% else %}No Report{% endifnotequal %}
+                            
+                        </tr>
+                    {% endfor %}
+                        
+                    </tbody>
+                </table>
+            </div>
+            
+        </div>
+    </div>
+    {% endblock  %}
+    

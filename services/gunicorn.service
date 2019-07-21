@@ -1,0 +1,15 @@
+[Unit]
+Description=gunicorn daemon
+After=network.target
+
+[Service]
+User=cse
+Group=adm
+WorkingDirectory=/home/cse/autograder
+ExecStart=/home/cse/autograder/venv/bin/gunicorn --workers 3 --access-logfile - --error-logfile - --bind unix:/home/cse/autograder/autograder.sock autograder.wsgi:application
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=gunicorn
+
+[Install]
+WantedBy=multi-user.target

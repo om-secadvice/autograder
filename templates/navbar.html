@@ -1,0 +1,18 @@
+{% load static %}
+<a href="/" class="brand-logo left" style="margin-top:0.5%">
+<img src="{% static 'images/iitk-logo.png' %}" width="60" height="auto" >
+
+</a>
+
+<ul id="nav-mobile" class="right hide-on-med-and-down">
+<li><span >CS 628A: Computer Systems Security</span></li>
+    <li><a href="{% url 'password_change' %}">Change Password</a></li>
+    {% if user.is_authenticated %}<li>
+    {% comment %} <a href="{% url 'logout' %}">Logout</a> {% endcomment %}
+    <button  class="waves-effect waves-light btn logout right"
+                onclick="window.location='{% url 'logout' %}'">Logout </button>
+    </li>{% endif %}
+</ul>
+{% comment %} <div id="nav-mobile" class="center hide-on-med-and-down">
+    <span style="font-size: 150%;">a</span>
+</div> {% endcomment %}
