@@ -1,4 +1,4 @@
-# Assignement Portal & Secure Autograder
+# Assignment Portal & Secure Autograder
 ### Python/Django, PostgreSQL, Javascript, HTML
 
 Features:
